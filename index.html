@@ -81,8 +81,11 @@
                 // Obtener la opción seleccionada (entrada o salida)
                 var tipoHora = document.getElementById("tipoHora").value;
 
+                // Obtener el área desde la columna C
+                var area = informacionEncontrada[2]; // Cambia a la posición correcta según la estructura de tus datos
+
                 // Construir el mensaje
-                var mensaje = "Código encontrado: " + informacionEncontrada[0] + "\nNombre: " + informacionEncontrada[1] + "\n" + tipoHora + ": " + horaFormateada;
+                var mensaje = "Código encontrado: " + informacionEncontrada[0] + "\nNombre: " + informacionEncontrada[1] + "\nÁrea: " + area + "\n" + tipoHora + ": " + horaFormateada;
 
                 // Mostrar la información en el mensaje emergente
                 alert(mensaje);
@@ -105,14 +108,19 @@
     </script>
 </head>
 <body>
-    <h1>Registrar Hora</h1>
-    <label for="tipoHora">Seleccione tipo de hora:</label>
-    <select id="tipoHora">
-        <option value="Hora de Entrada">Hora de Entrada</option>
-        <option value="Hora de Salida">Hora de Salida</option>
-    </select>
-    <br>
-    <input type="text" id="numeroInput" placeholder="Ingrese su código" />
-    <button onclick="registrarHora()">Registrar Hora Actual</button>
+    <div class="background-container">
+        <div class="card-container glass-effect">
+            <h1><p class="blanco">Registrar Hora</p></h1>
+            <label class = "Color-seleccion" for="tipoHora">Seleccione tipo de hora:</label>
+            <select id="tipoHora">
+                <option value="Hora de Entrada">Hora de Entrada</option>
+                <option value="Hora de Salida">Hora de Salida</option>
+            </select>
+            <br>
+            <input type="text" id="numeroInput" placeholder="Ingrese su código" />
+            <br>
+            <button onclick="registrarHora()" class="registrarHora">Registrar Hora Actual</button>    
+        </div>
+    </div>
 </body>
 </html>
