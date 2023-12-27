@@ -7,97 +7,108 @@
     <link rel="stylesheet" type="text/css" href="index.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
     <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Asigna el evento al botón al cargar el DOM
+            document.getElementById("registrarHoraBtn").addEventListener("click", registrarHora);
+        });
+
         function registrarHora() {
             // Obtener el valor ingresado en el input
-            var codigoIngresado = document.getElementById("numeroInput").value;
+            var codigoIngresado = document.getElementById("numeroInput").value.trim();
 
             // Verificar si el input está vacío
-            if (codigoIngresado.trim() === "") {
+            if (codigoIngresado === "") {
                 alert("Por favor, ingrese un código antes de registrar la hora.");
-                return; // Detener la ejecución si no hay un código ingresado
+                return;
             }
 
             // Obtener la información correspondiente al código desde el archivo Excel
             leerArchivoExcel(codigoIngresado);
         }
 
-        // Función para leer el archivo Excel y buscar la información correspondiente al código
         function leerArchivoExcel(codigo) {
             // Ruta al archivo Excel
             var archivoExcel = 'automa.xlsx';
 
-            // Lee el archivo Excel
+            // Crear un FileReader
             var reader = new FileReader();
+
+            // Configurar la carga del archivo
             reader.onload = function (e) {
                 var data = new Uint8Array(e.target.result);
                 var workbook = XLSX.read(data, { type: 'array' });
 
-                // Selecciona la primera hoja del libro de trabajo
+                // Seleccionar la primera hoja del libro de trabajo
                 var sheetName = workbook.SheetNames[0];
                 var sheet = workbook.Sheets[sheetName];
 
-                // Obtiene los datos de la hoja
+                // Obtener los datos de la hoja
                 var datos = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-                // Busca la información correspondiente al código ingresado
+                // Buscar la información correspondiente al código ingresado
                 var informacionEncontrada = buscarInformacion(codigo, datos);
 
-                // Muestra la información encontrada en el mensaje emergente
-                mostrarInformacionEnEmergente(informacionEncontrada, codigo);
+                // Mostrar la información en un mensaje emergente
+                mostrarInformacionEnEmergente(informacionEncontrada, codigo, workbook, sheetName);
             };
 
-            // Lee el contenido del archivo
+            // Leer el contenido del archivo
             fetch(archivoExcel)
                 .then((response) => response.arrayBuffer())
                 .then((data) => reader.readAsArrayBuffer(new Blob([data])));
         }
 
-        // Función para buscar la información correspondiente al código ingresado
         function buscarInformacion(codigo, datos) {
-            // Implementa la lógica de búsqueda en tus datos
+            // Implementar la lógica de búsqueda en tus datos
             // En este ejemplo, se busca en la primera columna de los datos
             for (var i = 0; i < datos.length; i++) {
                 if (datos[i][0] == codigo) {
-                    // Retorna la información encontrada
+                    // Retornar la información encontrada
                     return datos[i];
                 }
             }
 
-            // Retorna null si no se encuentra información correspondiente al código
+            // Retornar null si no se encuentra información correspondiente al código
             return null;
         }
 
-        // Función para mostrar la información encontrada en el mensaje emergente
-        function mostrarInformacionEnEmergente(informacionEncontrada, codigo) {
+        function mostrarInformacionEnEmergente(informacionEncontrada, codigo, workbook, sheetName) {
             if (informacionEncontrada) {
-                // Obtener la hora actual
+                // Obtener la fecha y hora actual
                 var fechaActual = new Date();
+                var dia = fechaActual.getDate();
+                var mes = fechaActual.getMonth() + 1; // Se suma 1 porque los meses van de 0 a 11
+                var anio = fechaActual.getFullYear();
                 var hora = fechaActual.getHours();
                 var minutos = fechaActual.getMinutes();
+
+                // Formatear la fecha como DD/MM/YYYY
+                var fechaFormateada = dia + "/" + mes + "/" + anio;
 
                 // Formatear la hora como HH:MM
                 var horaFormateada = hora + ":" + minutos;
 
-                // Obtener la opción seleccionada (entrada o salida)
+                // Obtener el tipo de hora seleccionado (entrada o salida)
                 var tipoHora = document.getElementById("tipoHora").value;
 
                 // Obtener el área desde la columna C
-                var area = informacionEncontrada[2]; // Cambia a la posición correcta según la estructura de tus datos
+                var area = informacionEncontrada[2]; // Cambiar a la posición correcta según la estructura de tus datos
 
                 // Construir el mensaje
-                var mensaje = "Código encontrado: " + informacionEncontrada[0] + "\nNombre: " + informacionEncontrada[1] + "\nÁrea: " + area + "\n" + tipoHora + ": " + horaFormateada;
+                var mensaje = "Código encontrado: " + informacionEncontrada[0] + "\nNombre: " + informacionEncontrada[1] + "\nÁrea: " + area + "\nFecha: " + fechaFormateada + "\n" + tipoHora + ": " + horaFormateada;
 
-                // Mostrar la información en el mensaje emergente
+                // Mostrar la información en un mensaje emergente
                 alert(mensaje);
 
                 // Preguntar al usuario si la información es correcta
                 var respuesta = confirm("¿La información es correcta?");
 
                 if (respuesta) {
-                    // Si la respuesta es sí, puedes guardar la información (aún no implementado)
+                    // Si la respuesta es sí, guardar la información en el archivo Excel
+                    /*guardarInformacionEnExcel(workbook, sheetName, informacionEncontrada, codigo, tipoHora, fechaFormateada, horaFormateada);*/
                     alert("Información guardada correctamente.");
                 } else {
-                    // Si la respuesta es no, puedes pedir al usuario que vuelva a ingresar el código
+                    // Si la respuesta es no, pedir al usuario que vuelva a ingresar el código
                     alert("Por favor, vuelva a ingresar el código.");
                 }
             } else {
@@ -105,13 +116,54 @@
                 alert("No se encontró información correspondiente al código ingresado.");
             }
         }
+
+        function guardarInformacionEnExcel(workbook, sheetName, informacionEncontrada, codigo, tipoHora, fecha, hora) {
+        // Añadir nueva fila con la información
+        var nuevaFila = [
+            codigo,
+            informacionEncontrada[1], // Nombre
+            informacionEncontrada[2], // Área
+            tipoHora,
+            fecha,
+            hora
+        ];
+
+        // Seleccionar la hoja del libro de trabajo
+        var sheet = workbook.Sheets[sheetName];
+
+        // Encontrar la última fila para añadir la nueva información
+        var ultimaFila = XLSX.utils.decode_range(sheet['!ref']).e.r;
+        var nuevaFilaIndex = ultimaFila + 1;
+
+        // Añadir la nueva fila al libro de trabajo
+        XLSX.utils.sheet_add_aoa(sheet, [nuevaFila], { origin: -1 });
+
+        // Convertir el libro de trabajo a un array de bytes
+        var arrayBuffer = XLSX.write(workbook, { bookType: 'xlsx', bookSST: false, type: 'array' });
+
+        // Crear un nuevo Blob con el array de bytes
+        var blob = new Blob([arrayBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+        // Crear un enlace de descarga
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'automa_actualizado.xlsx';
+
+        // Agregar el enlace al DOM y simular un clic para iniciar la descarga
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Liberar el objeto URL
+        URL.revokeObjectURL(link.href);
+    }
     </script>
 </head>
 <body>
     <div class="background-container">
         <div class="card-container glass-effect">
             <h1><p class="blanco">Registrar Hora</p></h1>
-            <label class = "Color-seleccion" for="tipoHora">Seleccione tipo de hora:</label>
+            <label class="Color-seleccion" for="tipoHora">Seleccione tipo de hora:</label>
             <select id="tipoHora">
                 <option value="Hora de Entrada">Hora de Entrada</option>
                 <option value="Hora de Salida">Hora de Salida</option>
@@ -119,7 +171,7 @@
             <br>
             <input type="text" id="numeroInput" placeholder="Ingrese su código" />
             <br>
-            <button onclick="registrarHora()" class="registrarHora">Registrar Hora Actual</button>    
+            <button id="registrarHoraBtn" class="registrarHora">Registrar Hora Actual</button>
         </div>
     </div>
 </body>
